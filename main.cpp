@@ -7,6 +7,8 @@
 #include "driverlib.h"
 #include "msp430_clock.h"
 #include "msp430_interrupt.h"
+#include "msp430_uart.h"
+
 static inline void msp430PlatformInit(void)
 {
     //Stop watchdog timer
@@ -14,11 +16,13 @@ static inline void msp430PlatformInit(void)
     //Set VCore = 1 for 12MHz clock
     PMM_setVCore(PMM_CORE_LEVEL_1);
     msp430_clock_init(12000000);
+    msp430_uart_init(115200);
     /* Enable interrupts. */
 	__bis_SR_register(GIE);
 }
 
 uint32_t time;
+uint8_t data;
 bool blinkstate = false;
 void blink()
 {
@@ -47,6 +51,13 @@ void main()
 			GPIO_setOutputLowOnPin(GPIO_PORT_P1,
 	                               GPIO_PIN0
 	                               );
+		}
+		while(msp430_uart_available() > 0)
+		{
+			if(msp430_uart_read(&data) == 0)
+			{
+				msp430_uart_write(&data, 1);
+			}
 		}
 	}
 }
