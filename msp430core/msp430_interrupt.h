@@ -59,8 +59,10 @@ void msp430_int_disable(void);
  *  @param[in]  lp_exit     Low-power mode exited after this interrupt
  *                          (INT_EXIT_LPMx).
  *  @param[in]  active_low  1 if this interrupt is active low.
+ *
+ *  @return 0 if successful
  */
-void msp430_reg_int_cb(void (*cb)(void), unsigned short pin,
+int8_t msp430_reg_int_cb(void (*cb)(void), unsigned short pin,
     unsigned char lp_exit, unsigned char active_low);
 
 

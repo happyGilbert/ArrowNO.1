@@ -73,9 +73,9 @@ void msp430_clock_init(uint32_t _mclk)
 
     UCS_turnOnSMCLK();
 
-	msp430_mclk_output_enable();
-	msp430_smclk_output_enable();
-	msp430_aclk_output_enable();
+//	msp430_mclk_output_enable();
+//	msp430_smclk_output_enable();
+//	msp430_aclk_output_enable();
 
 
     clock.ticks_per_interrupt = UCS_getSMCLK() / 40 / 1000;

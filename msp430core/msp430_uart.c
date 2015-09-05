@@ -46,7 +46,7 @@ void msp430_uart_init(unsigned long baud)
     /**Configure UART pins
      * Set P4.4 and P4.5 as Secondary Module Function Input.
      * Select Port 4
-     * Set Pin 4, 5 to input Secondary Module Function, (UCA0TXD/UCA0SIMO, UCA0RXD/UCA0SOMI).
+     * Set Pin 4, 5 to input Secondary Module Function, (UCA1TXD/UCA1SIMO, UCA1RXD/UCA1SOMI).
      **/
     GPIO_setAsPeripheralModuleFunctionInputPin(
         GPIO_PORT_P4,

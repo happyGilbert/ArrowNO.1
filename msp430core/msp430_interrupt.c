@@ -83,7 +83,7 @@ void msp430_int_disable(void)
 	    		);
 }
 
-void msp430_reg_int_cb(void (*cb)(void), unsigned short pin,
+int8_t msp430_reg_int_cb(void (*cb)(void), unsigned short pin,
     unsigned char lp_exit, unsigned char active_low)
 {
     unsigned char index, gpio_pin;
@@ -149,6 +149,7 @@ void msp430_reg_int_cb(void (*cb)(void), unsigned short pin,
             msp_int.p2_exit[index] = lp_exit;
         }
     }
+    return 0;
 }
 
 #pragma vector=PORT1_VECTOR

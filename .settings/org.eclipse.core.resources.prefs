@@ -1,5 +1,17 @@
 eclipse.preferences.version=1
 encoding//Debug/makefile=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/eMPL-hal/subdir_rules.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/eMPL-hal/subdir_vars.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/eMPL/subdir_rules.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/eMPL/subdir_vars.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/mllite/subdir_rules.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/mllite/subdir_vars.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/mpl/subdir_rules.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/mpl/subdir_vars.mk=UTF-8
+encoding//Debug/mpuxxxxcore/subdir_rules.mk=UTF-8
+encoding//Debug/mpuxxxxcore/subdir_vars.mk=UTF-8
+encoding//Debug/msp430core/TransportLayer/subdir_rules.mk=UTF-8
+encoding//Debug/msp430core/TransportLayer/subdir_vars.mk=UTF-8
 encoding//Debug/msp430core/driverlib/MSP430F5xx_6xx/subdir_rules.mk=UTF-8
 encoding//Debug/msp430core/driverlib/MSP430F5xx_6xx/subdir_vars.mk=UTF-8
 encoding//Debug/msp430core/subdir_rules.mk=UTF-8

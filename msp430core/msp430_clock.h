@@ -7,7 +7,6 @@
 
 #ifndef MSP430_CLOCK_H_
 #define MSP430_CLOCK_H_
-#include <stdint.h>
 //*****************************************************************************
 //
 // If building with a C++ compiler, make all of the definitions in this header
@@ -18,6 +17,7 @@
 extern "C"{
 #endif
 
+#include <stdint.h>
 //*****************************************************************************
 //
 //! \brief Initializes the system clock and delay and get running times function.

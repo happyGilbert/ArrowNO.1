@@ -7,7 +7,7 @@
 
 #ifndef MSP430_UART_H_
 #define MSP430_UART_H_
-#include <stdint.h>
+
 //*****************************************************************************
 //
 // If building with a C++ compiler, make all of the definitions in this header
@@ -18,6 +18,7 @@
 extern "C"{
 #endif
 
+#include <stdint.h>
 //*****************************************************************************
 //
 //! \brief Initializes the UART with the specified baud rate.

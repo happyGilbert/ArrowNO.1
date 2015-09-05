@@ -8,6 +8,9 @@
 #include "msp430_clock.h"
 #include "msp430_interrupt.h"
 #include "msp430_uart.h"
+#include "msp430_i2c.h"
+#include "msp430_sendMPUxxxxData.h"
+#include "mpuxxxx.h"
 
 static inline void msp430PlatformInit(void)
 {
@@ -17,47 +20,20 @@ static inline void msp430PlatformInit(void)
     PMM_setVCore(PMM_CORE_LEVEL_1);
     msp430_clock_init(12000000);
     msp430_uart_init(115200);
+    msp430_i2c_init();
     /* Enable interrupts. */
 	__bis_SR_register(GIE);
-}
-
-uint32_t time;
-uint8_t data;
-bool blinkstate = false;
-void blink()
-{
-	blinkstate = !blinkstate;
+	mpu9250.init();
 }
 
 void main()
 {
 	msp430PlatformInit();
-	msp430_delay_ms(11);
-	msp430_get_clock_ms(&time);
-	msp430_delay_ms(21);
-	msp430_get_clock_ms(&time);
-	GPIO_setAsOutputPin(GPIO_PORT_P1,
-			            GPIO_PIN0
-			            );
-	msp430_reg_int_cb(blink, INT_PIN_P17, INT_EXIT_NONE, 1);
+    P8DIR |= BIT1;
+    P8OUT |= BIT1;
 	while(1)
 	{
-		if(blinkstate){
-			msp430_delay_ms(100);
-			GPIO_setOutputHighOnPin(GPIO_PORT_P1,
-	                                GPIO_PIN0
-	                                );
-			msp430_delay_ms(100);
-			GPIO_setOutputLowOnPin(GPIO_PORT_P1,
-	                               GPIO_PIN0
-	                               );
-		}
-		while(msp430_uart_available() > 0)
-		{
-			if(msp430_uart_read(&data) == 0)
-			{
-				msp430_uart_write(&data, 1);
-			}
-		}
+		mpu9250.update();
+		__bis_SR_register(LPM0_bits + GIE);
 	}
 }
