@@ -18,6 +18,9 @@ extern "C"{
 #endif
 
 #include <stdint.h>
+
+#define CPU_F ((double)12000000)
+#define msp430_delay_us(x) __delay_cycles((long)(CPU_F*(double)x/1000000.0))
 //*****************************************************************************
 //
 //! \brief Initializes the system clock and delay and get running times function.

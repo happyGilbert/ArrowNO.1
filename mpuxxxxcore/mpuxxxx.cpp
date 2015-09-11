@@ -11,7 +11,7 @@
 
 #include "mpuxxxx.h"
 #include "flashctl.h"
-#include "msp430_sendMPUxxxxData.h"
+#include "transpotData.h"
 #include "msp430_interrupt.h"
 #include "msp430_clock.h"
 #include "inv_mpu.h"

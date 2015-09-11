@@ -1,4 +1,8 @@
 eclipse.preferences.version=1
+encoding//Debug/ads1299core/core/subdir_rules.mk=UTF-8
+encoding//Debug/ads1299core/core/subdir_vars.mk=UTF-8
+encoding//Debug/ads1299core/subdir_rules.mk=UTF-8
+encoding//Debug/ads1299core/subdir_vars.mk=UTF-8
 encoding//Debug/makefile=UTF-8
 encoding//Debug/mpuxxxxcore/mpucore/eMPL-hal/subdir_rules.mk=UTF-8
 encoding//Debug/mpuxxxxcore/mpucore/eMPL-hal/subdir_vars.mk=UTF-8
@@ -8,6 +12,8 @@ encoding//Debug/mpuxxxxcore/mpucore/mllite/subdir_rules.mk=UTF-8
 encoding//Debug/mpuxxxxcore/mpucore/mllite/subdir_vars.mk=UTF-8
 encoding//Debug/mpuxxxxcore/mpucore/mpl/subdir_rules.mk=UTF-8
 encoding//Debug/mpuxxxxcore/mpucore/mpl/subdir_vars.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/transport/subdir_rules.mk=UTF-8
+encoding//Debug/mpuxxxxcore/mpucore/transport/subdir_vars.mk=UTF-8
 encoding//Debug/mpuxxxxcore/subdir_rules.mk=UTF-8
 encoding//Debug/mpuxxxxcore/subdir_vars.mk=UTF-8
 encoding//Debug/msp430core/TransportLayer/subdir_rules.mk=UTF-8

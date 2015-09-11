@@ -9,7 +9,7 @@ from ponycube import *
 
 class eMPL_packet_reader:
     def __init__(self, port, quat_delegate=None, debug_delegate=None, data_delegate=None ):
-        self.s = serial.Serial(port,115200)
+        self.s = serial.Serial(port,230400)
         self.s.setTimeout(0.1)
         self.s.setWriteTimeout(0.2)
 # TODO: Will this break anything?

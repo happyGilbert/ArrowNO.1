@@ -14,7 +14,7 @@
  *          system layer functions.
  *
  *  @{
- *      @file   log_msp430.c
+ *      @file   transpotData.c
  *      @brief  Logging facility for the TI MSP430.
  */
 
@@ -22,7 +22,7 @@
 #include <string.h>
 
 #include "packet.h"
-#include "msp430_sendMPUxxxxData.h"
+#include "transpotData.h"
 #include "msp430_uart.h"
 
 #define BUF_SIZE        (256)
