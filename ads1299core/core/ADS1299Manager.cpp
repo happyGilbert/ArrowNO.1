@@ -441,13 +441,11 @@ void ADS1299Manager::writeChannelDataAsUAISLab(uint32_t sampleNumber){
 	uint8_t data, *data_ptr;
 	data_ptr = &data;
 	data = PCKT_START;
-	msp430_uart_write(data_ptr,1);                   // Write start byte: '$'
-	data = PCKT_TYPE;
-	msp430_uart_write(data_ptr,1);                   // Write start byte: 3(data)
+	msp430_uart_write(data_ptr,1);                   // Write start byte: 0xA0
 	data = PCKT_EEG;
 	msp430_uart_write(data_ptr,1);                   // Write eeg byte:   0x10
 
-	data = (uint8_t)((1+ADS_LEADS_PER_CHIP*ADS_LEADS)*4+ADS_LEADS);
+	data = (uint8_t)(4+ADS_LEADS+ADS_LEADS_PER_CHIP*ADS_LEADS*3);
 	msp430_uart_write(data_ptr, 1);                 //write the length of the payload(samplenumber+lead-off state+eeg data)
 
 	data = (uint8_t)(sampleNumber >> 24);           //write the sample number,can used to check whether or not lost packet.
@@ -469,19 +467,17 @@ void ADS1299Manager::writeChannelDataAsUAISLab(uint32_t sampleNumber){
 	}
 
 	for (uint8_t chan = 0; chan < (ADS_LEADS * ADS_LEADS_PER_CHIP); chan++ ){
-		data = (uint8_t)(channelData[chan] >> 24);  // get the real EEG data for this channel
-		msp430_uart_write(data_ptr, 1);
-		data = (uint8_t)(channelData[chan] >> 16);
+//		data = (uint8_t)(channelData[chan] >> 24);  // get the real EEG data for this channel
+//		msp430_uart_write(data_ptr, 1);
+		data = (uint8_t)(channelData[chan] >> 16);  // get the real EEG data for this channel
 		msp430_uart_write(data_ptr, 1);
 		data = (uint8_t)(channelData[chan] >> 8);
 		msp430_uart_write(data_ptr, 1);
 		data = (uint8_t)(channelData[chan]);
 		msp430_uart_write(data_ptr, 1);
 	}
-	data = PCKT_END0;
-	msp430_uart_write(data_ptr,1);                  // Write packet end: '\r\n'
-	data = PCKT_END1;
-	msp430_uart_write(data_ptr,1);
+	data = PCKT_END;
+	msp430_uart_write(data_ptr,1);                  // Write packet end: '0xC0
 
 	//msp430_uart_flush();                         // wait transfer complete.
 }

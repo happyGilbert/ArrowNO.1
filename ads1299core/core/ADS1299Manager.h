@@ -55,11 +55,9 @@
 #define ON (1)
 
 //binary communication codes for each packet
-#define PCKT_START '$'
-#define PCKT_TYPE (3)
+#define PCKT_START 0xA0
 #define PCKT_EEG 0x10
-#define PCKT_END0 '\r'
-#define PCKT_END1 '\n'
+#define PCKT_END 0xC0
 
 class ADS1299Manager : public ADS1299 {
   public:

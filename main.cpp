@@ -38,7 +38,7 @@ void main()
 	while(1)
 	{
 		ads1299_update();
-//		mpu9250.update();
+		mpu9250.update();
 		__bis_SR_register(LPM0_bits + GIE);
 	}
 }
