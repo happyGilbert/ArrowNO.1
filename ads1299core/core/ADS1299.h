@@ -28,18 +28,20 @@
 class ADS1299 {
 public:
 	//********************************************************************************************
+	//
 	//! \brief Initializes ADS1299.
 	//!
 	//! pin map: MSP430F5529  <--->  ADS1299
 	//!          P2.7         <--->  SCLK --|
-	//!          P3.3         <--->  SIMO   |---USCI A0 SPI£º4MHZ
+	//!          P3.3         <--->  SIMO   |---USCI A0
 	//!          P3.4         <--->  SOMI --|
 	//!          P6.0         <--->  CS FOR CHIP ONE
 	//!          P6.1         <--->  CS FOR CHIP TWO
 	//!          P6.2         <--->  CS FOR CHIP THREE(Reserve, must re-define ADS1299_MAX_CHIPS)
 	//!          P6.3         <--->  CS FOR CHIP FOUR (Reserve, must re-define ADS1299_MAX_CHIPS)
-	//!          P3.2         <--->  RST
-	//!          P4.0         <--->  START
+	//!          P3.7         <--->  PWDN
+	//!          P3.6         <--->  RST
+	//!          P3.5         <--->  START
 	//!          P2.1         <--->  DRDY(interrupt)
 	//!
 	//! \param[in] cb is the call back function for data ready interrupt(DADY).
@@ -55,6 +57,8 @@ public:
     void RESET();                   // reset chip and all the registers to default settings
     void START();                   //start data conversion
     void STOP();                    //stop data conversion
+    void POWERDOWN();               //enter power down mode
+    void POWERUP();                 //exit power down mode
     
     /*Data Read Commands*/
     void RDATAC();                  //enable read data continuous mode
@@ -140,13 +144,14 @@ public:
 
     //configuration
     uint8_t ADS_LEADS;                                    //hold leads pf system.
-    uint8_t START_PORT, RST_PORT, CS_PORT;                //hold pin information
-    uint8_t START_PIN, RST_PIN, CS_PIN[ADS1299_MAX_CHIPS];//hold pin information
+//    uint8_t START_PORT, RST_PORT, PWDN_PORT, CS_PORT, OSC_PORT;                //hold port information
+//    uint8_t START_PIN, RST_PIN, PWDN_PIN, OSC_PIN, CS_PIN[ADS1299_MAX_CHIPS];  //hold pin information
+    uint8_t CS_PIN[ADS1299_MAX_CHIPS];                    //hold pin information
     uint16_t stat[ADS1299_MAX_CHIPS];                     //hold lead-off detection result.
 #ifdef ADS_DEBUG
     uint8_t regData [24 * ADS1299_MAX_CHIPS];	          //hold all registers value of chips
 #endif
-    long channelData [ADS1299_MAX_CHIPS * ADS_LEADS_PER_CHIP];//hold conversion result.
+    long channelData [ADS1299_MAX_CHIPS * ADS_LEADS_PER_CHIP];                   //hold conversion result.
     bool verbose;		                                  // turn on/off print information
     
     

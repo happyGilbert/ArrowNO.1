@@ -14,6 +14,17 @@
 
 #define bitRead(data, bit)  ((data & (0x01<<bit))?'1':'0')
 
+#define	DRDY_PORT   GPIO_PORT_P2
+#define	DRDY_PIN    GPIO_PIN1
+
+#define	START_PORT  GPIO_PORT_P3
+#define	START_PIN   GPIO_PIN5
+#define	RST_PORT    GPIO_PORT_P3
+#define	RST_PIN     GPIO_PIN6
+#define	PWDN_PORT   GPIO_PORT_P3
+#define	PWDN_PIN    GPIO_PIN7
+#define	CS_PORT     GPIO_PORT_P6
+
 
 //********************************************************************************************
 //
@@ -27,9 +38,10 @@
 //!          P6.1         <--->  CS FOR CHIP TWO
 //!          P6.2         <--->  CS FOR CHIP THREE(Reserve, must re-define ADS1299_MAX_CHIPS)
 //!          P6.3         <--->  CS FOR CHIP FOUR (Reserve, must re-define ADS1299_MAX_CHIPS)
-//!          P3.2         <--->  RST
-//!          P4.0         <--->  START
-//!          P2.1         <--->  DRDY(interrupt)
+//!          P3.7         <--->  PWDN
+//!          P3.6         <--->  RST
+//!          P3.5         <--->  START
+//!          P1.0         <--->  DRDY(interrupt)
 //!
 //! \param[in] cb is the call back function for data ready interrupt(DADY).
 //! \param[in] ads_leads is the leads of multi-chip ads1299: ADS_LEADS_8,
@@ -39,20 +51,12 @@
 void ADS1299::initialize(void (*cb)(void), uint8_t ads_leads){
 	struct int_param_s int_param;
 	int_param.cb = cb;
-	int_param.pin = INT_PIN_P21;      //p2.1 interrput for DRDY pin
+	int_param.pin = INT_PIN_P10;      //p1.0 interrput for DRDY pin
 	int_param.lp_exit = INT_EXIT_LPM0;//after return of interrupt, program will exit lpm0 mode.
 	int_param.active_low = 1;         //low-active
 
 	ADS_LEADS = ads_leads;
 
-//	DRDY_PORT = GPIO_PORT_P2;
-//	DRDY_PIN = GPIO_PIN1;
-
-	START_PORT = GPIO_PORT_P4;
-	START_PIN = GPIO_PIN0;
-	RST_PORT = GPIO_PORT_P3;
-	RST_PIN = GPIO_PIN2;
-	CS_PORT = GPIO_PORT_P6;
 	for(uint8_t chips = 0; chips < ADS_LEADS; chips++){
 		CS_PIN[chips] = (0x0001 << chips);
 	}                                 //initialize CS pin with BIT0, BIT1,......
@@ -72,6 +76,9 @@ void ADS1299::initialize(void (*cb)(void), uint8_t ads_leads){
 
 	GPIO_setAsOutputPin(RST_PORT, RST_PIN);
 	GPIO_setOutputHighOnPin(RST_PORT, RST_PIN);
+
+	GPIO_setAsOutputPin(PWDN_PORT, PWDN_PIN);
+	GPIO_setOutputHighOnPin(PWDN_PORT, PWDN_PIN);
 
 	msp430_delay_ms(50);				// recommended power up sequence requiers Tpor (~32mS)
 	GPIO_setOutputLowOnPin(RST_PORT, RST_PIN);  //reset ads1299
@@ -101,7 +108,16 @@ void ADS1299::STANDBY() {		   // get into standby mode
 	}
 }
 
-void ADS1299::RESET() {			   // reset chip and all the registers to default settings
+void ADS1299::POWERDOWN(){        //enter power down mode
+	GPIO_setOutputLowOnPin(PWDN_PORT, PWDN_PIN);
+}
+
+void ADS1299::POWERUP(){         //exit power down mode
+	GPIO_setOutputHighOnPin(PWDN_PORT, PWDN_PIN);
+	msp430_delay_ms(50);
+}
+
+void ADS1299::RESET() {			 // reset chip and all the registers to default settings
 	for(uint8_t chips = 0; chips < ADS_LEADS; chips++){
 	    GPIO_setOutputLowOnPin(CS_PORT, CS_PIN[chips]);
 	    msp430_spi_a0_transmitData(_RESET);

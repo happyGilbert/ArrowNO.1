@@ -173,6 +173,7 @@ __interrupt void USCI_A1_ISR(void)
     //Vector 2 - RXIFG
     case 2:
     	uart_rx_isr();
+    	__bic_SR_register_on_exit(LPM0_bits);
         break;
     //Vector 4 - TXIFG
     case 4:

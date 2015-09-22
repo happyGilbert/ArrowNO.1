@@ -103,6 +103,17 @@ void msp430_delay_ms(unsigned long num_ms);
 void msp430_register_timer_cb(void (*timer_cb)(void), unsigned long num_ms);
 //*****************************************************************************
 //
+//! \brief Register a periodic task .
+//!
+//! \param task_cb is the periodic task's function.
+//! \param task_time_ms is the periodic task's period(ms).
+//!
+//! \return None.
+//
+//*****************************************************************************
+void msp430_register_task_cb(void (*task_cb)(void), unsigned long task_time_ms);
+//*****************************************************************************
+//
 //! \brief Output MCLK in P7.7.
 //!
 //! Output MCLK in P7.7.

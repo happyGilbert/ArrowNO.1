@@ -20,10 +20,15 @@ struct msp430_clock_s {
     unsigned short ticks_per_interrupt;//timer b0 count to getting time interval.
     unsigned long timer_remaining_ms;  //remaining Time for time based event function will be executed.
     void (*timer_cb)(void);            //point to function for register event.
-};
+
+    unsigned long task_time_ms;        //period of periodic task
+    void (*task_cb)(void);             //periodic task function.
+};;
 static struct msp430_clock_s clock = {
     .timer_remaining_ms = 0,
-    .timer_cb = NULL
+    .timer_cb = NULL,
+    .task_time_ms = 0,
+    .task_cb = NULL
 };
 
 
@@ -83,6 +88,8 @@ void msp430_clock_init(uint32_t _mclk)
 	clock.timestamp = 0;
 	clock.timer_cb = NULL;
 	clock.timer_remaining_ms = 0;
+	clock.task_cb = NULL;
+	clock.task_time_ms = 0;
 
 	//enable timer b0 contiuous mode.
     Timer_B_initContinuousModeParam initContParam = {0};
@@ -126,6 +133,11 @@ __interrupt void TIMERB0_ISR (void)
         clock.timer_remaining_ms -= clock.ms_per_interrupt;
         if (!clock.timer_remaining_ms)
             clock.timer_cb();
+    }
+    if(!clock.task_time_ms){
+    	if((clock.timestamp % clock.task_time_ms) == 0){
+    		clock.task_cb();
+    	}
     }
 
     __bic_SR_register_on_exit(LPM0_bits);
@@ -175,6 +187,12 @@ void msp430_register_timer_cb(void (*timer_cb)(void), unsigned long num_ms)
         clock.ms_per_interrupt);
     clock.timer_cb = timer_cb;
     return;
+}
+
+void msp430_register_task_cb(void (*task_cb)(void), unsigned long task_time_ms)
+{
+	clock.task_cb = task_cb;
+	clock.task_time_ms = task_time_ms;
 }
 
 void msp430_mclk_output_enable()

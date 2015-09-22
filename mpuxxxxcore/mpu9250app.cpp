@@ -1,5 +1,5 @@
 /*
- * mpuxxxx.cpp
+ * mpu9250app.cpp
  *
  *  Created on: 2015Äê8ÔÂ28ÈÕ
  *      Author: jfanl
@@ -9,7 +9,8 @@
 #include <string.h>
 #include <msp430.h>
 
-#include "mpuxxxx.h"
+#include "gpio.h"
+#include "mpu9250app.h"
 #include "flashctl.h"
 #include "transpotData.h"
 #include "msp430_interrupt.h"
@@ -23,17 +24,8 @@
 #include "mpu.h"
 #include "packet.h"
 
-#define PRINT_NONE      (0x00)
-#define PRINT_ACCEL     (0x01)
-#define PRINT_GYRO      (0x02)
-#define PRINT_QUAT      (0x04)
-#define PRINT_COMPASS   (0x08)
-#define PRINT_EULER     (0x10)
-#define PRINT_ROT_MAT   (0x20)
-#define PRINT_HEADING   (0x40)
-#define PRINT_PEDO      (0x80)
-#define PRINT_LINEAR_ACCEL (0x100)
-#define PRINT_GRAVITY_VECTOR (0x200)
+#define MPU9250_PW_PORT  GPIO_PORT_P3
+#define MPU9250_PW_PIN   GPIO_PIN2
 
 #define ACCEL_ON        (0x01)
 #define GYRO_ON         (0x02)
@@ -91,6 +83,8 @@ static struct platform_data_s compass_pdata = {
 };
 #define COMPASS_ENABLED 1
 #endif
+
+static struct hal_s hal;
 
 static void tap_cb(unsigned char direction, unsigned char count)
 {
@@ -155,19 +149,14 @@ static void data_ready_cb(void)
     mpu_rx_new = 1;
 }
 
-MPUCLASS mpu9250;
 unsigned char *mpl_key = (unsigned char*)"eMPL 5.1";
-MPUCLASS::MPUCLASS()
-{
-	memset(&hal, 0, sizeof(hal));
-}
 
 
 /* Get data from MPL.
  * TODO: Add return values to the inv_get_sensor_type_xxx APIs to differentiate
  * between new and stale data.
  */
-void MPUCLASS::read_from_mpl(void)
+static void mpu9250_read_from_mpl(void)
 {
     long msg, data[9];
     int8_t accuracy;
@@ -179,6 +168,7 @@ void MPUCLASS::read_from_mpl(void)
     		 * test app to visually represent a 3D quaternion, it's sent each time
     	     * the MPL has new data.
     	     */
+//    		eMPL_send_quat(data);
     		eMPL_send_data(PACKET_DATA_QUAT, data);
     	}
     }
@@ -260,7 +250,7 @@ void MPUCLASS::read_from_mpl(void)
 }
 
 /* Handle sensor on/off combinations. */
-void MPUCLASS::setup_sensor(void)
+static void mpu9250_setup_sensor(void)
 {
     unsigned char mask = 0, lp_accel_was_on = 0;
     if (hal.sensors & ACCEL_ON){
@@ -314,31 +304,34 @@ void MPUCLASS::setup_sensor(void)
  * PRINT_LINEAR_ACCEL
  * PRINT_GRAVITY_VECTOR
  * */
-void MPUCLASS::printSensor(uint16_t printMask)
-{
-	if(printMask & PRINT_ACCEL)
-	{
-		hal.sensors |= ACCEL_ON;
-	}
-	if(printMask & PRINT_GYRO)
-	{
-		hal.sensors |= GYRO_ON;
-	}
+void mpu9250_setPrintSensor(uint8_t printMask, uint8_t enable){
+	if(printMask == PRINT_NONE){
+		hal.report = PRINT_NONE;
+	}else{
+		if(enable){
+			hal.report |= printMask;
+		}else{
+			hal.report &= ~printMask;
+		}
+		if(hal.report & PRINT_ACCEL){
+			hal.sensors |= ACCEL_ON;
+		}
+		if(hal.report & PRINT_GYRO){
+			hal.sensors |= GYRO_ON;
+		}
 #ifdef COMPASS_ENABLED
-	if(printMask & PRINT_COMPASS)
-	{
-		hal.sensors |= COMPASS_ON;
-	}
+		if(hal.report & PRINT_COMPASS){
+			hal.sensors |= COMPASS_ON;
+		}
 #endif
-	if(printMask & (PRINT_EULER | PRINT_QUAT | PRINT_HEADING | PRINT_ROT_MAT))
-	{
-		hal.sensors |= ACCEL_ON + COMPASS_ON + GYRO_ON;
+		if(hal.report & (PRINT_EULER | PRINT_QUAT | PRINT_HEADING | PRINT_ROT_MAT)){
+			hal.sensors |= ACCEL_ON + COMPASS_ON + GYRO_ON;
+		}
+		mpu9250_setup_sensor();
 	}
-	hal.report = printMask;
-	MPUCLASS::setup_sensor();
 }
 
-void MPUCLASS::lpAccelMode()
+void mpu9250_lpAccelMode()
 {
     if (hal.dmp_on)
         /* LP accel is not compatible with the DMP. */
@@ -360,10 +353,11 @@ void MPUCLASS::lpAccelMode()
     hal.lp_accel_mode = 1;
     inv_gyro_was_turned_off();
     inv_compass_was_turned_off();
-    MPUCLASS::printSensor(PRINT_ACCEL);
+    mpu9250_setPrintSensor(PRINT_NONE,ENABLEOUTPUT);
+    mpu9250_setPrintSensor(PRINT_ACCEL,ENABLEOUTPUT);
 }
 
-int8_t MPUCLASS::loadMplState()
+static int8_t mpu9250_loadMplState()
 {
 	size_t store_size;
     inv_get_mpl_state_size(&store_size);
@@ -380,7 +374,7 @@ int8_t MPUCLASS::loadMplState()
     return 0;
 }
 
-int8_t MPUCLASS::saveMplState()
+static int8_t mpu9250_saveMplState()
 {
 	size_t store_size;
     inv_get_mpl_state_size(&store_size);
@@ -419,7 +413,7 @@ int8_t MPUCLASS::saveMplState()
     return 0;
 }
 
-void MPUCLASS::setSampleRate(unsigned short accel_gyro_rate_hz, unsigned short compass_rate_hz)
+void mpu9250_setSampleRate(unsigned short accel_gyro_rate_hz, unsigned short compass_rate_hz)
 {
     if (hal.dmp_on) {
         dmp_set_fifo_rate(accel_gyro_rate_hz);
@@ -434,12 +428,12 @@ void MPUCLASS::setSampleRate(unsigned short accel_gyro_rate_hz, unsigned short c
 }
 
 /*@param[in]  mode    DMP_INT_GESTURE or DMP_INT_CONTINUOUS.*/
-void MPUCLASS::dmpInterruptMode(unsigned char mode)
+void mpu9250_dmpInterruptMode(unsigned char mode)
 {
 	dmp_set_interrupt_mode(mode);
 }
 
-void MPUCLASS::dmpEnable(uint8_t enable)
+void mpu9250_dmpEnable(uint8_t enable)
 {
     if (hal.lp_accel_mode)
         /* LP accel is not compatible with the DMP. */
@@ -479,7 +473,7 @@ void MPUCLASS::dmpEnable(uint8_t enable)
     }
 }
 
-void MPUCLASS::motionInterruptEnable(uint8_t enable)
+void mpu9250_motionInterruptEnable(uint8_t enable)
 {
 	if(enable)
 	{
@@ -502,7 +496,7 @@ void MPUCLASS::motionInterruptEnable(uint8_t enable)
 	}
 }
 
-void MPUCLASS::runSelfTest(void)
+void mpu9250_runSelfTest(void)
 {
     int result;
     long gyro[3], accel[3];
@@ -557,7 +551,7 @@ void MPUCLASS::runSelfTest(void)
 		gyro[1] = (long) (gyro[1] * test_gyro_sens);
 		gyro[2] = (long) (gyro[2] * test_gyro_sens);
 		inv_set_gyro_bias(gyro, 3);
-		if(MPUCLASS::saveMplState() != 0)
+		if(mpu9250_saveMplState() != 0)
 		{
 			/*TODO: save bias failed! Do something!*/
 		}
@@ -582,7 +576,7 @@ void MPUCLASS::runSelfTest(void)
     inv_compass_was_turned_off();*/
 }
 
-void MPUCLASS::init(void)
+void mpu9250_init(void)
 {
     inv_error_t result;
     unsigned char accel_fsr;
@@ -592,13 +586,16 @@ void MPUCLASS::init(void)
 #ifdef COMPASS_ENABLED
     unsigned short compass_fsr;
 #endif
-
+	GPIO_setAsInputPin(MPU9250_PW_PORT, MPU9250_PW_PIN);
+	GPIO_setOutputLowOnPin(MPU9250_PW_PORT, MPU9250_PW_PIN);  //LOW to power up
+	msp430_delay_ms(70);
+    memset(&hal, 0, sizeof(hal));
     /* Set up gyro.
      * Every function preceded by mpu_ is a driver function and can be found
      * in inv_mpu.h.
      */
     int_param.cb = data_ready_cb;
-    int_param.pin = INT_PIN_P20;
+    int_param.pin = INT_PIN_P11;
     int_param.lp_exit = INT_EXIT_LPM0;
     int_param.active_low = 1;
     result = mpu_init(&int_param);
@@ -648,10 +645,10 @@ void MPUCLASS::init(void)
      *
      * inv_enable_in_use_auto_calibration();
      */
-//    MPUCLASS::runSelfTest();
-    if(MPUCLASS::loadMplState() != 0)  /*load bias from flash, if failed, run self test to get new bias.*/
+//    mpu9250_runSelfTest();
+    if(mpu9250_loadMplState() != 0)  /*load bias from flash, if failed, run self test to get new bias.*/
     {
-    	MPUCLASS::runSelfTest();
+    	mpu9250_runSelfTest();
     }
 #ifdef COMPASS_ENABLED
     /* Compass calibration algorithms. */
@@ -664,7 +661,7 @@ void MPUCLASS::init(void)
      * inv_enable_heading_from_gyro();
      */
 
-    /* Allows use of the MPL APIs in read_from_mpl. */
+    /* Allows use of the MPL APIs in mpu9250_read_from_mpl. */
     inv_enable_eMPL_outputs();
 
     result = inv_start_mpl();
@@ -799,11 +796,11 @@ void MPUCLASS::init(void)
     inv_set_quat_sample_rate(1000000L / DEFAULT_MPU_HZ);
     mpu_set_dmp_state(1);
     hal.dmp_on = 1;
-   /* MPUCLASS::printSensor(PRINT_ACCEL + PRINT_GYRO + PRINT_QUAT + PRINT_COMPASS + PRINT_EULER);*/
-    MPUCLASS::printSensor(PRINT_QUAT);
+   /* mpu9250_setPrintSensor(PRINT_ACCEL + PRINT_GYRO + PRINT_QUAT + PRINT_COMPASS + PRINT_EULER);*/
+    mpu9250_setPrintSensor(PRINT_QUAT,ENABLEOUTPUT);
 }
 
-void MPUCLASS::update()
+void mpu9250_update()
 {
     unsigned long sensor_timestamp;
     unsigned long timestamp;
@@ -952,7 +949,18 @@ void MPUCLASS::update()
 			 * in eMPL_outputs.c. This function only needs to be called at the
 			 * rate requested by the host.
 			 */
-			MPUCLASS::read_from_mpl();
+			mpu9250_read_from_mpl();
 		}
 	}
+}
+
+void mpu9250_powerUp(){
+	mpu9250_init();
+}
+
+void mpu9250_powerDown(){
+	inv_disable_eMPL_outputs();
+	mpu_set_dmp_state(0);
+	mpu_set_sensors(0);
+	GPIO_setOutputHighOnPin(MPU9250_PW_PORT, MPU9250_PW_PIN);  //HIGH to power down
 }

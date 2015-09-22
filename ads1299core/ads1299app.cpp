@@ -39,12 +39,32 @@ void ads1299_init(uint8_t ads_leads){
 	data0 = 0;
 	data0 = ADSManager.getDeviceID(ADS_CHIP_ONE);
 }
-
+//********************************************************************************************
+//
+//! \brief power up ads1299 and the registers value will same with the vlue before power down.
+//
+//********************************************************************************************
+void ads1299_powerUp(){
+	ADSManager.POWERUP();
+}
+//********************************************************************************************
+//
+//! \brief power down ads1299.
+//
+//********************************************************************************************
+void ads1299_powerDown(){
+	ADSManager.POWERDOWN();
+}
+//********************************************************************************************
+//! \brief Configure all channel to normal data continuous sampling mode.
+//
+//********************************************************************************************
 //********************************************************************************************
 //! \brief Configure all channel to normal data continuous sampling mode.
 //
 //********************************************************************************************
 void ads1299_activeAllChannelToNormalOperation(){
+	ads1299_stopRunning();
 	for(uint8_t chips = 0; chips < ADSManager.ADS_LEADS; chips++){
 		for (uint8_t chan=1; chan <= 8; chan++) {
 			ADSManager.activateChannel(chan, GAIN, ADSINPUT_NORMAL,chips);
