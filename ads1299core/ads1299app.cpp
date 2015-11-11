@@ -5,21 +5,27 @@
  *      Author: jfanl
  */
 #include "ads1299app.h"
+#include "msp430_clock.h"
 
 ADS1299Manager ADSManager;
 unsigned long sampleCounter = 0; //record sampling number
-static bool ads_rx_new = false;  //flag for new data ready
-
+//static bool ads_rx_new = false;  //flag for new data ready
+static bool *manuallySend;  //after get new data into buffer, whether or not send new data to
+                        //bluetooth uart port. if *manuallySend = false, please manually execute
+                        //ads_sendData() function.
+static bool bufferUpdate = false; //used for manually send data to indicate whether or not has
+                                  //new data stored in buffer.
 //********************************************************************************************
 //! \brief DRDY pin interrupt function.
 //
 //********************************************************************************************
-static void ads_data_ready_cb()
+void ads_data_ready_cb()
 {
-	ads_rx_new = true;         //true means new data ready.
+//	ads_rx_new = true;         //true means new data ready.
+	ads1299_update();
 }
 
-volatile uint8_t data0 = 0;
+//volatile uint8_t data0 = 0;
 
 //********************************************************************************************
 //! \brief Initializes ADS1299 app layer.
@@ -28,16 +34,20 @@ volatile uint8_t data0 = 0;
 //!             ADS_LEADS_16, ADS_LEADS_24(Reserve) or ADS_LEADS_32(Reserve).
 //
 //********************************************************************************************
-void ads1299_init(uint8_t ads_leads){
+void ads1299_init(uint8_t ads_leads,bool *ads_manuallySend){
+	manuallySend = ads_manuallySend;
 	ADSManager.initialize(ads_data_ready_cb,ads_leads);
+//	ADSManager.initialize(ads_data_ready_cb,ads_leads,NEGATIVE_INPUT,false);
+//	ADSManager.initialize(ads_data_ready_cb,ads_leads,POSTIVE_INPUT,false);
+
 	ads1299_activeAllChannelToNormalOperation();
 	ads1299_activeLeadOFFDetection();
 #ifdef ADS_DEBUG
 	ads1299_printAllchipRegister();               //print register information. if not use, comment it.
 #endif
-	ads_rx_new = false;
-	data0 = 0;
-	data0 = ADSManager.getDeviceID(ADS_CHIP_ONE);
+//	ads_rx_new = false;
+//	data0 = 0;
+//	data0 = ADSManager.getDeviceID(ADS_CHIP_ONE);
 }
 //********************************************************************************************
 //
@@ -109,17 +119,33 @@ void ads1299_printAllchipRegister(){
 #endif
 
 //********************************************************************************************
-//! \brief Send new data to uart port.
+//! \brief get data to buffer and send new data to uart port.
 //! \no action when no new data ready.
 //
 //********************************************************************************************
 void ads1299_update(){
-    if(ads_rx_new){
+//    if(ads_rx_new){
 	    ADSManager.updateChannelData();
 	    sampleCounter++;
-	    ADSManager.writeChannelDataAsUAISLab(sampleCounter);
-	    ads_rx_new = false;
-    }
+	    if(*manuallySend){
+	    	bufferUpdate = true;
+	    }else{
+	    	ADSManager.writeChannelDataAsUAISLab(sampleCounter);
+	    }
+//	    ads_rx_new = false;
+//    }
+}
+//********************************************************************************************
+//! \brief send new data to uart port.
+//! \no action when data in buffer not update.
+//
+//********************************************************************************************
+void ads1299_sendData(){
+	if(bufferUpdate){
+		ADSManager.writeChannelDataAsUAISLab(sampleCounter);
+		bufferUpdate = false;
+	}
+
 }
 
 //********************************************************************************************

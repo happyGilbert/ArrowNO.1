@@ -28,7 +28,7 @@ void msp430_spi_a0_init()
     USCI_A_SPI_initMasterParam param = {0};
     param.selectClockSource = USCI_A_SPI_CLOCKSOURCE_SMCLK;
     param.clockSourceFrequency = UCS_getSMCLK();
-    param.desiredSpiClock = 4000000;
+    param.desiredSpiClock = 8000000;
     param.msbFirst = USCI_A_SPI_MSB_FIRST;
     param.clockPhase = USCI_A_SPI_PHASE_DATA_CHANGED_ONFIRST_CAPTURED_ON_NEXT;
     param.clockPolarity = USCI_A_SPI_CLOCKPOLARITY_INACTIVITY_LOW;
@@ -49,6 +49,7 @@ uint8_t msp430_spi_a0_transmitData(uint8_t transmitData)
     //USCI_A0 TX buffer ready?
     while(!USCI_A_SPI_getInterruptStatus(USCI_A0_BASE,
     		USCI_A_SPI_TRANSMIT_INTERRUPT));
+    _wasReceived = 0;
     USCI_A_SPI_transmitData(USCI_A0_BASE, transmitData);
     //USCI_A0 TX buffer ready?
     while(!_wasReceived)
@@ -56,7 +57,6 @@ uint8_t msp430_spi_a0_transmitData(uint8_t transmitData)
     	//Enter LPM0 mode, wait receive interrupt.
     	__bis_SR_register(LPM0_bits + GIE);
     }
-    _wasReceived = 0;
 //    while(!USCI_A_SPI_getInterruptStatus(USCI_A0_BASE,
 //    		USCI_A_SPI_RECEIVE_INTERRUPT));
     return USCI_A_SPI_receiveData(USCI_A0_BASE);

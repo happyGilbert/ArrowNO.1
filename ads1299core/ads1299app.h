@@ -18,13 +18,19 @@
 //!             ADS_LEADS_16, ADS_LEADS_24(Reserve) or ADS_LEADS_32(Reserve).
 //
 //********************************************************************************************
-void ads1299_init(uint8_t ads_leads);
+void ads1299_init(uint8_t ads_leads,bool *ads_manuallySend);
 //********************************************************************************************
-//! \brief Send new data to uart port.
+//! \brief get data to buffer and send new data to uart port.
 //! \no action when no new data ready.
 //
 //********************************************************************************************
 void ads1299_update();
+//********************************************************************************************
+//! \brief send new data to uart port.
+//! \no action when data in buffer not update.
+//
+//********************************************************************************************
+void ads1299_sendData();
 //********************************************************************************************
 //! \brief Start continuous data acquisition.
 //

@@ -11,5 +11,6 @@
 void sharp96_init();
 void sharp96_powerDown();
 void sharp96_powerUp();
+void sharp96_displayBatteryCapacity(unsigned char capacity, unsigned char chargeStatus);
 
 #endif /* SHARP96APP_H_ */

@@ -134,7 +134,7 @@ __interrupt void TIMERB0_ISR (void)
         if (!clock.timer_remaining_ms)
             clock.timer_cb();
     }
-    if(!clock.task_time_ms){
+    if(clock.task_time_ms){
     	if((clock.timestamp % clock.task_time_ms) == 0){
     		clock.task_cb();
     	}

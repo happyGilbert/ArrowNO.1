@@ -25,9 +25,10 @@
 #include "transpotData.h"
 #include "msp430_uart.h"
 
-//#define BUF_SIZE        (256)
 #define PACKET_LENGTH   (21)
 
+//#define BUF_SIZE        (256)
+//#define PACKET_LENGTH   (23)
 //#define PACKET_DEBUG    (1)
 //#define PACKET_QUAT     (2)
 //#define PACKET_DATA     (3)

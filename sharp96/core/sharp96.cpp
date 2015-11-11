@@ -55,7 +55,16 @@ static uint8_t sizeofstr(const char *str){
 	while(*str++ != 0) size++;
 	return size;
 }
-
+//*****************************************************************************
+//
+//! set a point in display buffer.
+//! \param: x: x of point, 0 ~ 95
+//! \param: y: y of point, 0 ~ 95
+//! \param: ulValue: 0: clear the point, 1: set the point.
+//!
+//! /return none.
+//
+//*****************************************************************************
 void lcdSharp96::setXY(uint8_t x, uint8_t y, uint8_t  ulValue) {
     if( ulValue != 0)
         DisplayBuffer[y][x>>3] &= ~(0x80 >> (x & 0x7));
@@ -95,20 +104,51 @@ void lcdSharp96::init() {
 	ClearScreen();
     _font = 0;
 }
-
+//*****************************************************************************
+//
+//! Power Down the Sharp96.
+//!
+//! This function used to disable the power which supply to shar96 lcd.
+//! Because MCU has hold 96X96 RAM space for display buffer, shap96 can dispay
+//! same information which displayed before sharp96 power down when sharp96
+//! power up again and use flush function to force to display information!
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::powerDown(){
 	GPIO_setOutputLowOnPin(LCD_DISP_PORT,
             LCD_DISP_PIN);
 	GPIO_setOutputLowOnPin(LCD_POWER_PORT,
             LCD_POWER_PIN);
 }
+//*****************************************************************************
+//
+//! Power up the Sharp96.
+//!
+//! This function used to enable the power which supply to shar96 lcd.
+//! Because MCU has hold 96X96 RAM space for display buffer, shap96 can dispay
+//! same information which displayed before sharp96 power down when sharp96
+//! power up again and use flush function to force to display information!
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::powerUp(){
 	GPIO_setOutputHighOnPin(LCD_POWER_PORT,
             LCD_POWER_PIN);
 	GPIO_setOutputHighOnPin(LCD_DISP_PORT,
             LCD_DISP_PIN);
 }
-
+//*****************************************************************************
+//
+//! Clear screen and display buffer.
+//!
+//! This function used to clear screen and display buffer!
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::ClearScreen() {
   
   unsigned char command = SHARP_LCD_CMD_CLEAR_SCREEN;
@@ -139,25 +179,75 @@ void lcdSharp96::ClearScreen() {
   
 }
 
+//*****************************************************************************
+//
+//! Clear display buffer.
+//!
+//! This function used to display buffer!
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::clearBuffer() {
     unsigned int i=0,j=0;
     for(i =0; i< LCD_VERTICAL_MAX; i++)
     for(j =0; j< (LCD_HORIZONTAL_MAX>>3); j++)
        DisplayBuffer[i][j] = SHARP_WHITE;
 }
-
+//*****************************************************************************
+//
+//! set font which will be used next.
+//!
+//! This function used to set font which will be used next.
+//! \param: font: 0: 5x8, 1: 11x16
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::setFont(tNumOfFontsType font) {
     _font = font;
 }
-
+//*****************************************************************************
+//
+//! set line space between adjacent lines.
+//!
+//! This function used to set line space between adjacent lines.
+//! \param: line space in pixel.
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::setLineSpacing(uint8_t pixel) {
     lineSpacing[_font] = pixel;
 }
-
+//*****************************************************************************
+//
+//! Draw horizontal line.
+//!
+//! This function used to draw a horizontal line.
+//! \param: x1: x of start point, 0 ~ 95
+//! \param: x2: x of end point, 0 ~ 95
+//! \param: y: y of horizontal line, 0 ~ 95
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::drawHorizontalLine(uint8_t x1, uint8_t x2, uint8_t y){
 	drawHorizontalLine(x1, x2, y, SHARP_BLACK);
 }
-
+//*****************************************************************************
+//
+//! Draw horizontal line.
+//!
+//! This function used to draw a horizontal line.
+//! \param: x1: x of start point, 0 ~ 95
+//! \param: x2: x of end point, 0 ~ 95
+//! \param: y: y of horizontal line, 0 ~ 95
+//! \param: color :SHARP_BLACK(lit), SHARP_WHITE(unlit)
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::drawHorizontalLine(uint8_t x1, uint8_t x2, uint8_t y, uint8_t color){
     uint8_t xi = 0;
     uint8_t x1_index = x1 >> 3,  x2_index = x2 >> 3;
@@ -207,11 +297,34 @@ void lcdSharp96::drawHorizontalLine(uint8_t x1, uint8_t x2, uint8_t y, uint8_t c
     	}
     }
 }
-
+//*****************************************************************************
+//
+//! Draw vertical line.
+//!
+//! This function used to draw a vertical line.
+//! \param: x: x of vertical line, 0 ~ 95
+//! \param: y1: y of start point, 0 ~ 95
+//! \param: y2: y of end point, 0 ~ 95
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2){
 	drawVerticalLine(x, y1, y2, SHARP_BLACK);
 }
-
+//*****************************************************************************
+//
+//! Draw vertical line.
+//!
+//! This function used to draw a vertical line.
+//! \param: x: x of vertical line, 0 ~ 95
+//! \param: y1: y of start point, 0 ~ 95
+//! \param: y2: y of end point, 0 ~ 95
+//! \param: color :SHARP_BLACK(lit), SHARP_WHITE(unlit)
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2, uint8_t color){
     uint16_t yi = 0;
     uint16_t x_index = x >> 3;
@@ -236,11 +349,38 @@ void lcdSharp96::drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2, uint8_t col
         }
     }
 }
-
+//*****************************************************************************
+//
+//! Draw rectangle.
+//!
+//! This function used to draw a rectangle.
+//! \param: x1: x of start point, 0 ~ 95
+//! \param: y1: y of start point, 0 ~ 95
+//! \param: x2: y of end point, 0 ~ 95
+//! \param: y2: y of end point, 0 ~ 95
+//! \param: fill : false: unfill, true: fill.
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::drawRectangle(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, bool fill){
 	drawRectangle(x1, x2, y1, y2, SHARP_BLACK, fill);
 }
-
+//*****************************************************************************
+//
+//! Draw rectangle.
+//!
+//! This function used to draw a rectangle.
+//! \param: x1: x of start point, 0 ~ 95
+//! \param: y1: y of start point, 0 ~ 95
+//! \param: x2: y of end point, 0 ~ 95
+//! \param: y2: y of end point, 0 ~ 95
+//! \param: fill : false: unfill, true: fill.
+//! \param: color :SHARP_BLACK(lit), SHARP_WHITE(unlit)
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::drawRectangle(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, uint8_t color, bool fill){
 	uint8_t xi = 0, yi = 0;
     uint8_t x1_index = x1 >> 3, x2_index = x2 >> 3;
@@ -324,15 +464,56 @@ void lcdSharp96::drawRectangle(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, u
 
     }
 }
-
+//*****************************************************************************
+//
+//! Display string .
+//!
+//! This function used to display a string.
+//! \param: x: x of start point, 0 ~ 95
+//! \param: y: y of start point, 0 ~ 95
+//! \param: data: data of string.
+//! A pixel for space between characters.
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::displayString(uint8_t x, uint8_t y, const char *data) {
 	displayString(x, y, data, sizeofstr(data), LCDWrapNextLine);
 }
-
+//*****************************************************************************
+//
+//! Display string .
+//!
+//! This function used to display a string.
+//! \param: x: x of start point, 0 ~ 95
+//! \param: y: y of start point, 0 ~ 95
+//! \param: data: data of string.
+//! \param: length: the number of character of string.
+//! A pixel for space between characters.
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::displayString(uint8_t x, uint8_t y, const char *data, uint8_t length) {
 	displayString(x, y, data, length, LCDWrapNextLine);
 }
-
+//*****************************************************************************
+//
+//! Display string .
+//!
+//! This function used to display a string.
+//! \param: x: x of start point, 0 ~ 95
+//! \param: y: y of start point, 0 ~ 95
+//! \param: data: data of string.
+//! \param: length: the number of character of string.
+//! \param: wrap LCDWrapNone: do not wrap,
+//!              LCDWrapLine: wrap, to beginning of line,
+//!              LCDWrapNextLine: wrap, to next line.
+//! A pixel for space between characters.
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::displayString(uint8_t x, uint8_t y, const char *data, uint8_t length, tLCDWrapType wrap) {
     uint8_t i;
     uint8_t j;
@@ -371,7 +552,21 @@ void lcdSharp96::displayString(uint8_t x, uint8_t y, const char *data, uint8_t l
 		}
 	}
 }
-
+//*****************************************************************************
+//
+//! Draw image .
+//!
+//! This function used to display a image.
+//! \param: x: x of start point, 0 ~ 95
+//! \param: y: y of start point, 0 ~ 95
+//! \param: width: width of image in pixel.
+//! \param: high:  high of image in pixel.
+//! \param: data: data of image.
+//! Image is horizontal scan!
+//!
+//! \return None.
+//
+//*****************************************************************************
 void lcdSharp96::drawImage(uint8_t x, uint8_t y, uint8_t width, uint8_t high, const uint8_t *data){
 	uint8_t deltax = 0, deltay = 0;
 	uint16_t index = 0;
@@ -385,7 +580,17 @@ void lcdSharp96::drawImage(uint8_t x, uint8_t y, uint8_t width, uint8_t high, co
     	}
     }
 }
-
+//*****************************************************************************
+//
+//! Reverse display information!.
+//!
+//! Reverse a rectangle area of display buffer, need use flush to force to screen.
+//! \param: x1: x of start point, 0 ~ 95
+//! \param: y1: y of start point, 0 ~ 95
+//! \param: x2: x of end point, 0 ~ 95
+//! \param: y2: y of end point, 0 ~ 95
+//
+//*****************************************************************************
 void lcdSharp96::reversalDisplay(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2){
 	uint8_t xi = 0, yi = 0;
     uint8_t x1_index = x1 >> 3, x2_index = x2 >> 3;
@@ -438,7 +643,13 @@ uint8_t lcdSharp96::reverse(uint8_t x)
   return b;
 }
 
-
+//*****************************************************************************
+//
+//! Force display buffer information to display in screen.
+//!
+//! /return none.
+//
+//*****************************************************************************
 void lcdSharp96::flush (void)
 {
     unsigned char *buf_ptr = &DisplayBuffer[0][0];

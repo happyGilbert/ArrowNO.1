@@ -52,9 +52,12 @@ struct hal_s {
 //*****************************************************************************
 //
 //! \brief Initializes MPUxxxx device with 9-axes fution and output quaternion.
+//!
+//! \param mpu_isSending used to indicate whether or not mpu9250 is sending
+//!                      data to bluetooth uart port!.
 //
 //*****************************************************************************
-void mpu9250_init(void);
+void mpu9250_init(bool *mpu_isSending);
 //*****************************************************************************
 //
 //! \brief Use to get new data when new data available.
@@ -140,7 +143,7 @@ void mpu9250_runSelfTest(void);
 //! \brief power up mpu9250 and call mpu9250_init() to Initializes mpu9250.
 //
 //*****************************************************************************
-void mpu9250_powerUp();
+void mpu9250_powerUp(bool *mpu_isSending);
 //*****************************************************************************
 //
 //! \brief power down mpu9250.

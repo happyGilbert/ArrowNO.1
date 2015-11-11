@@ -13,13 +13,13 @@
 
 void bluetooth_init(){
 	GPIO_setAsOutputPin(BLUETOOTH_PW_PORT, BLUETOOTH_PW_PIN);
-	GPIO_setOutputLowOnPin(BLUETOOTH_PW_PORT, BLUETOOTH_PW_PIN);
-}
-
-void bluetooth_powerDown(){
 	GPIO_setOutputHighOnPin(BLUETOOTH_PW_PORT, BLUETOOTH_PW_PIN);
 }
 
-void bluetooth_powerUp(){
+void bluetooth_powerDown(){
 	GPIO_setOutputLowOnPin(BLUETOOTH_PW_PORT, BLUETOOTH_PW_PIN);
+}
+
+void bluetooth_powerUp(){
+	GPIO_setOutputHighOnPin(BLUETOOTH_PW_PORT, BLUETOOTH_PW_PIN);
 }

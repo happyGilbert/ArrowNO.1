@@ -14,8 +14,8 @@
 
 #define bitRead(data, bit)  ((data & (0x01<<bit))?'1':'0')
 
-#define	DRDY_PORT   GPIO_PORT_P2
-#define	DRDY_PIN    GPIO_PIN1
+#define	DRDY_PORT   GPIO_PORT_P1
+#define	DRDY_PIN    GPIO_PIN0
 
 #define	START_PORT  GPIO_PORT_P3
 #define	START_PIN   GPIO_PIN5
@@ -52,7 +52,7 @@ void ADS1299::initialize(void (*cb)(void), uint8_t ads_leads){
 	struct int_param_s int_param;
 	int_param.cb = cb;
 	int_param.pin = INT_PIN_P10;      //p1.0 interrput for DRDY pin
-	int_param.lp_exit = INT_EXIT_LPM0;//after return of interrupt, program will exit lpm0 mode.
+	int_param.lp_exit = INT_EXIT_NONE;//after return of interrupt, program will exit lpm0 mode.
 	int_param.active_low = 1;         //low-active
 
 	ADS_LEADS = ads_leads;
@@ -61,11 +61,6 @@ void ADS1299::initialize(void (*cb)(void), uint8_t ads_leads){
 		CS_PIN[chips] = (0x0001 << chips);
 	}                                 //initialize CS pin with BIT0, BIT1,......
 
-	
-//	GPIO_setAsInputPinWithPullUpResistor(DRDY_PORT, DRDY_PIN);
-	msp430_reg_int_cb(int_param.cb, int_param.pin, int_param.lp_exit,
-			int_param.active_low);   //register interrupt function and parameters
-
 	for(uint8_t chips = 0; chips < ADS_LEADS; chips++){  //initialize pin state.
 		GPIO_setAsOutputPin(CS_PORT, CS_PIN[chips]);
 		GPIO_setOutputHighOnPin(CS_PORT, CS_PIN[chips]);
@@ -73,10 +68,8 @@ void ADS1299::initialize(void (*cb)(void), uint8_t ads_leads){
 
 	GPIO_setAsOutputPin(START_PORT, START_PIN);
 	GPIO_setOutputLowOnPin(START_PORT, START_PIN);
-
 	GPIO_setAsOutputPin(RST_PORT, RST_PIN);
 	GPIO_setOutputHighOnPin(RST_PORT, RST_PIN);
-
 	GPIO_setAsOutputPin(PWDN_PORT, PWDN_PIN);
 	GPIO_setOutputHighOnPin(PWDN_PORT, PWDN_PIN);
 
@@ -86,8 +79,10 @@ void ADS1299::initialize(void (*cb)(void), uint8_t ads_leads){
 	GPIO_setOutputHighOnPin(RST_PORT, RST_PIN);
 	msp430_delay_us(20);	         // recommended to wait 18 Tclk before using device (~8uS)
     
-	msp430_spi_a0_init();            //initialize SPI with 4MHZ SCLK, MSB, UCCKPH:0, UCCKPl:0
-    
+	msp430_spi_a0_init();            //initialize SPI with 8MHZ SCLK, MSB, UCCKPH:0, UCCKPl:0
+//	GPIO_setAsInputPinWithPullUpResistor(DRDY_PORT, DRDY_PIN);
+	msp430_reg_int_cb(int_param.cb, int_param.pin, int_param.lp_exit,
+			int_param.active_low);   //register interrupt function and parameters
 }
 
 /*System Commands, command will send to all chip in multi-chip ads1299*/

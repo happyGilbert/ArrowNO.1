@@ -85,6 +85,11 @@ static struct platform_data_s compass_pdata = {
 #endif
 
 static struct hal_s hal;
+/*mpu data will be processed in main program, not in interrupt service routine,
+but ads1299 is processed in interrupt service routine. so isSend used to indicate
+mpu data is sengding through bluetooth and ads1299 should not to send data to
+bluetooth uart port. This used to protect data packet's integrity!*/
+static bool *isSending;
 
 static void tap_cb(unsigned char direction, unsigned char count)
 {
@@ -144,7 +149,7 @@ unsigned char mpu_rx_new;
  * function.
  */
 //TODO: rename function name and mpu_rx_new
-static void data_ready_cb(void)
+void data_ready_cb(void)
 {
     mpu_rx_new = 1;
 }
@@ -169,45 +174,59 @@ static void mpu9250_read_from_mpl(void)
     	     * the MPL has new data.
     	     */
 //    		eMPL_send_quat(data);
+    		*isSending = true;
     		eMPL_send_data(PACKET_DATA_QUAT, data);
+    		*isSending = false;
     	}
     }
     if (hal.report & PRINT_ACCEL) {
         if (inv_get_sensor_type_accel(data, &accuracy,
             (inv_time_t*)&timestamp)) {
+        	*isSending = true;
             eMPL_send_data(PACKET_DATA_ACCEL, data);
+            *isSending = false;
         }
     }
     if (hal.report & PRINT_GYRO) {
         if (inv_get_sensor_type_gyro(data, &accuracy,
             (inv_time_t*)&timestamp)) {
+        	*isSending = true;
             eMPL_send_data(PACKET_DATA_GYRO, data);
+            *isSending = false;
         }
     }
 #ifdef COMPASS_ENABLED
     if (hal.report & PRINT_COMPASS) {
         if (inv_get_sensor_type_compass(data, &accuracy,
             (inv_time_t*)&timestamp)) {
+        	*isSending = true;
             eMPL_send_data(PACKET_DATA_COMPASS, data);
+            *isSending = false;
         }
     }
 #endif
     if (hal.report & PRINT_EULER) {
         if (inv_get_sensor_type_euler(data, &accuracy,
             (inv_time_t*)&timestamp)) {
+        	*isSending = true;
             eMPL_send_data(PACKET_DATA_EULER, data);
+            *isSending = false;
         }
     }
     if (hal.report & PRINT_ROT_MAT) {
         if (inv_get_sensor_type_rot_mat(data, &accuracy,
             (inv_time_t*)&timestamp)) {
+        	*isSending = true;
             eMPL_send_data(PACKET_DATA_ROT, data);
+            *isSending = false;
         }
     }
     if (hal.report & PRINT_HEADING) {
         if (inv_get_sensor_type_heading(data, &accuracy,
             (inv_time_t*)&timestamp)) {
+        	*isSending = true;
             eMPL_send_data(PACKET_DATA_HEADING, data);
+            *isSending = false;
         }
     }
     if (hal.report & PRINT_LINEAR_ACCEL) {
@@ -230,7 +249,9 @@ static void mpu9250_read_from_mpl(void)
             hal.next_pedo_ms = timestamp + PEDO_READ_MS;
             dmp_get_pedometer_step_count(&dat[0]);
             dmp_get_pedometer_walk_time(&dat[1]);
+            *isSending = true;
             eMPL_send_data(PACKET_DATA_PEDOMETER, (long *)dat);
+            *isSending = false;
         }
     }
 
@@ -575,8 +596,15 @@ void mpu9250_runSelfTest(void)
     inv_gyro_was_turned_off();
     inv_compass_was_turned_off();*/
 }
-
-void mpu9250_init(void)
+//*****************************************************************************
+//
+//! \brief Initializes MPUxxxx device with 9-axes fution and output quaternion.
+//!
+//! \param mpu_isSending used to indicate whether or not mpu9250 is sending
+//!                      data to bluetooth uart port!.
+//
+//*****************************************************************************
+void mpu9250_init(bool *mpu_isSending)
 {
     inv_error_t result;
     unsigned char accel_fsr;
@@ -586,8 +614,9 @@ void mpu9250_init(void)
 #ifdef COMPASS_ENABLED
     unsigned short compass_fsr;
 #endif
-	GPIO_setAsInputPin(MPU9250_PW_PORT, MPU9250_PW_PIN);
-	GPIO_setOutputLowOnPin(MPU9250_PW_PORT, MPU9250_PW_PIN);  //LOW to power up
+    isSending = mpu_isSending;
+    GPIO_setAsOutputPin(MPU9250_PW_PORT, MPU9250_PW_PIN);
+	GPIO_setOutputHighOnPin(MPU9250_PW_PORT, MPU9250_PW_PIN);  //LOW to power up
 	msp430_delay_ms(70);
     memset(&hal, 0, sizeof(hal));
     /* Set up gyro.
@@ -954,13 +983,13 @@ void mpu9250_update()
 	}
 }
 
-void mpu9250_powerUp(){
-	mpu9250_init();
+void mpu9250_powerUp(bool *mpu_isSending){
+	mpu9250_init(mpu_isSending);
 }
 
 void mpu9250_powerDown(){
 	inv_disable_eMPL_outputs();
 	mpu_set_dmp_state(0);
 	mpu_set_sensors(0);
-	GPIO_setOutputHighOnPin(MPU9250_PW_PORT, MPU9250_PW_PIN);  //HIGH to power down
+	GPIO_setOutputLowOnPin(MPU9250_PW_PORT, MPU9250_PW_PIN);  //HIGH to power down
 }

@@ -12,43 +12,67 @@
 #include "mpu9250app.h"
 #include "ads1299app.h"
 #include "sharp96app.h"
+#include "ds2786app.h"
 #include "bluetoothapp.h"
 
 const uint8_t header[] = "uais";
 uint8_t rx_header[4] = {0};
 bool ads1299_is_running = false;
 bool mpu9250_is_running = false;
+bool ads1299_manually_send = false;
+bool *mpu9250_is_sending;
+
+static void cmdAction(uint8_t cmd);
+void serialEvent();
 
 static inline void msp430PlatformInit(void)
 {
     //Stop watchdog timer
     WDT_A_hold(WDT_A_BASE);
     //Set VCore = 1 for 12MHz clock
-    PMM_setVCore(PMM_CORE_LEVEL_1);
-    msp430_clock_init(12000000);
+    PMM_setVCore(PMM_CORE_LEVEL_3);
+    msp430_clock_init(24000000);
+    /* Enable interrupts. */
+	__bis_SR_register(GIE);
+
+	mpu9250_is_sending = &ads1299_manually_send;
     bluetooth_init();
     sharp96_init();
     msp430_uart_init(230400);
-    ads1299_init(ADS_LEADS_16);
     msp430_i2c_init();
-    /* Enable interrupts. */
-	__bis_SR_register(GIE);
-	mpu9250_init();
+
+
+    ads1299_init(ADS_LEADS_16,&ads1299_manually_send);
+    mpu9250_init(mpu9250_is_sending);
+	mpu9250_is_running = true;
+	ads1299_startRunning();
+	ads1299_is_running = true;
 }
 
 void main()
 {
-	void serialEvent();
+	unsigned char capacity, chargeStatus,indicate=0;
 	msp430PlatformInit();
-//	serialEvent();
-//	ads1299_activateAllChannelsToTestCondition_fast_2X();
-	ads1299_startRunning();
+#ifdef DS27866_WERITE_EEPROM_PARAMETER
+	ds2786_setParameter();
+#endif
+
 	while(1)
 	{
-		ads1299_update();
-		mpu9250_update();
-		serialEvent();
 		__bis_SR_register(LPM0_bits + GIE);
+		mpu9250_update();
+		ads1299_sendData();
+		serialEvent();
+		if(indicate == 0){
+			capacity = ds2786_getRelativeCapacity();
+		}else if(indicate == 1){
+			chargeStatus = ds2786_getChargeStatus();
+		}else if(indicate == 2){
+			sharp96_displayBatteryCapacity(capacity, chargeStatus);
+		}
+		indicate++;
+		if(indicate == 10) indicate=0;
+
 	}
 }
 
@@ -80,8 +104,12 @@ static void cmdAction(uint8_t cmd){
 		ads1299_is_running = false;
 		break;
 	case 'e':      //turn on mpu9250
-		mpu9250_powerUp();
+		if(ads1299_is_running)
+			ads1299_stopRunning();
+		mpu9250_powerUp(mpu9250_is_sending);
 		mpu9250_is_running = true;
+		if(ads1299_is_running)
+			ads1299_startRunning();
 		break;
 	case 'f':      //turn off mpu9250
 		mpu9250_powerDown();
