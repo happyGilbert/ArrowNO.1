@@ -152,6 +152,7 @@ public:
     uint8_t regData [24 * ADS1299_MAX_CHIPS];	          //hold all registers value of chips
 #endif
     long channelData [ADS1299_MAX_CHIPS * ADS_LEADS_PER_CHIP];                   //hold conversion result.
+    unsigned long timestamp,sampleNumber;//record timeof sampling and sampling number
     bool verbose;		                                  // turn on/off print information
     
     

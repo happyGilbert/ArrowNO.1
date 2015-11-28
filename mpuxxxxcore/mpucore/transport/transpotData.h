@@ -14,7 +14,7 @@ extern "C" {
 
 //int _MLPrintLog (int priority, const char* tag, const char* fmt, ...);
 //void eMPL_send_quat(long *quat);
-void eMPL_send_data(unsigned char type, long *data);
+void eMPL_send_data(unsigned char type, long *data, unsigned long timestamp);
 
 #ifdef __cplusplus
 }

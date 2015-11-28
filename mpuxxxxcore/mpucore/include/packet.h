@@ -47,10 +47,11 @@ void eMPL_send_quat(long *quat);
 
 /**
  *  @brief      Send a data packet via USB.
- *  @param[in]  type    Contents of packet (PACKET_DATA_ACCEL, etc).
- *  @param[in]  data    Data (length dependent on contents).
+ *  @param[in]  type         Contents of packet (PACKET_DATA_ACCEL, etc).
+ *  @param[in]  data         Data (length dependent on contents).
+ *  @param[in]  timestamp    time stamp for data sampling.
  */
-void eMPL_send_data(unsigned char type, long *data);
+void eMPL_send_data(unsigned char type, long *data, unsigned long timestamp);
 
 #endif /* __PACKET_H__ */
 

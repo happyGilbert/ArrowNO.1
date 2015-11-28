@@ -15,19 +15,19 @@
 #define REF_FREQUENCE  32768  //DCO reference
 
 struct msp430_clock_s {
-    volatile uint32_t timestamp;       //running times of system.
-    unsigned short ms_per_interrupt;   //timer b0 interrupt time interval.
+    volatile uint32_t timestamp;       //running times of system in 0.1ms resolution.
+    unsigned short time_per_interrupt;   //timer b0 interrupt time interval, units: 0.1ms.
     unsigned short ticks_per_interrupt;//timer b0 count to getting time interval.
-    unsigned long timer_remaining_ms;  //remaining Time for time based event function will be executed.
+    unsigned long timer_remaining;  //remaining Time for time based event function will be executed, units: 0.1ms.
     void (*timer_cb)(void);            //point to function for register event.
 
-    unsigned long task_time_ms;        //period of periodic task
+    unsigned long task_time;        //period of periodic task, units: 0.1ms.
     void (*task_cb)(void);             //periodic task function.
 };;
 static struct msp430_clock_s clock = {
-    .timer_remaining_ms = 0,
+    .timer_remaining = 0,
     .timer_cb = NULL,
-    .task_time_ms = 0,
+    .task_time = 0,
     .task_cb = NULL
 };
 
@@ -83,13 +83,13 @@ void msp430_clock_init(uint32_t _mclk)
 //	msp430_aclk_output_enable();
 
 
-    clock.ticks_per_interrupt = UCS_getSMCLK() / 40 / 1000;
-	clock.ms_per_interrupt = 1;
+    clock.ticks_per_interrupt = UCS_getSMCLK() / 40 / 10000;
+	clock.time_per_interrupt = 1;
 	clock.timestamp = 0;
 	clock.timer_cb = NULL;
-	clock.timer_remaining_ms = 0;
+	clock.timer_remaining = 0;
 	clock.task_cb = NULL;
-	clock.task_time_ms = 0;
+	clock.task_time = 0;
 
 	//enable timer b0 contiuous mode.
     Timer_B_initContinuousModeParam initContParam = {0};
@@ -128,14 +128,14 @@ __interrupt void TIMERB0_ISR (void)
                             TIMER_B_CAPTURECOMPARE_REGISTER_0,
                             compVal
                             );
-    clock.timestamp += clock.ms_per_interrupt;
-    if (clock.timer_remaining_ms) {
-        clock.timer_remaining_ms -= clock.ms_per_interrupt;
-        if (!clock.timer_remaining_ms)
+    clock.timestamp += clock.time_per_interrupt;
+    if (clock.timer_remaining) {
+        clock.timer_remaining -= clock.time_per_interrupt;
+        if (!clock.timer_remaining)
             clock.timer_cb();
     }
-    if(clock.task_time_ms){
-    	if((clock.timestamp % clock.task_time_ms) == 0){
+    if(clock.task_time){
+    	if((clock.timestamp % clock.task_time) == 0){
     		clock.task_cb();
     	}
     }
@@ -162,13 +162,21 @@ void msp430_get_clock_ms(unsigned long *times)
 {
     if (!times)
         return;
-    times[0] = clock.timestamp;
+    times[0] = clock.timestamp / 10;
+}
+
+void msp430_get_timestamp(unsigned long *timestamp)
+{
+    if (!timestamp)
+        return;
+    timestamp[0] = clock.timestamp;
 }
 
 void msp430_delay_ms(unsigned long num_ms)
 {
     uint32_t start_time = clock.timestamp;
-    while (clock.timestamp - start_time < num_ms)
+    uint32_t num = num_ms * 10;
+    while (clock.timestamp - start_time < num)
         __bis_SR_register(LPM0_bits + GIE);
 }
 
@@ -176,15 +184,15 @@ void msp430_register_timer_cb(void (*timer_cb)(void), unsigned long num_ms)
 {
     if (!timer_cb || !num_ms) {
         clock.timer_cb = NULL;
-        clock.timer_remaining_ms = 0;
+        clock.timer_remaining = 0;
         return;
     }
 
-    /* Timer count needs to be evenly divisible by clock.ms_per_interrupt to
+    /* Timer count needs to be evenly divisible by clock.time_per_interrupt to
      * avoid overflow.
      */
-    clock.timer_remaining_ms = num_ms + (clock.timer_remaining_ms %
-        clock.ms_per_interrupt);
+    clock.timer_remaining = (num_ms + (clock.timer_remaining %
+        clock.time_per_interrupt)) * 10;
     clock.timer_cb = timer_cb;
     return;
 }
@@ -192,7 +200,7 @@ void msp430_register_timer_cb(void (*timer_cb)(void), unsigned long num_ms)
 void msp430_register_task_cb(void (*task_cb)(void), unsigned long task_time_ms)
 {
 	clock.task_cb = task_cb;
-	clock.task_time_ms = task_time_ms;
+	clock.task_time = task_time_ms * 10;
 }
 
 void msp430_mclk_output_enable()

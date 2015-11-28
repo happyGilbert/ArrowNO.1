@@ -78,6 +78,16 @@ uint32_t msp430_get_aclk_freq();
 void msp430_get_clock_ms(unsigned long *times);
 //*****************************************************************************
 //
+//! \brief Get the running times of system for times.
+//!
+//! \param timestamp is the running times of system, resolution: 0.1ms.
+//!
+//! \return None.
+//
+//*****************************************************************************
+void msp430_get_timestamp(unsigned long *timestamp);
+//*****************************************************************************
+//
 //! \brief Make delay for program.
 //!
 //! Make delay for program.

@@ -56,6 +56,8 @@ void ADS1299::initialize(void (*cb)(void), uint8_t ads_leads){
 	int_param.active_low = 1;         //low-active
 
 	ADS_LEADS = ads_leads;
+	timestamp = 0;
+	sampleNumber = 0;
 
 	for(uint8_t chips = 0; chips < ADS_LEADS; chips++){
 		CS_PIN[chips] = (0x0001 << chips);
@@ -293,6 +295,8 @@ void ADS1299::WREGS(uint8_t _address, uint8_t _numRegistersMinusOne, uint8_t chi
 
 void ADS1299::updateChannelData(){
 	uint8_t inByte;
+	msp430_get_timestamp(&timestamp);
+	sampleNumber++;
 	for(uint8_t chips = 0; chips < ADS_LEADS; chips++){
 		GPIO_setOutputLowOnPin(CS_PORT, CS_PIN[chips]);
 
@@ -325,6 +329,8 @@ void ADS1299::updateChannelData(){
 //read data by command: single-shot conversion
 void ADS1299::RDATA() {
 	uint8_t inByte;
+	msp430_get_timestamp(&timestamp);
+	sampleNumber++;
 	for(uint8_t chips = 0; chips < ADS_LEADS; chips++){
 		GPIO_setOutputLowOnPin(CS_PORT, CS_PIN[chips]);
 		msp430_spi_a0_transmitData(_RDATA);

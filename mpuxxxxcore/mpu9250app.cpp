@@ -90,6 +90,7 @@ but ads1299 is processed in interrupt service routine. so isSend used to indicat
 mpu data is sengding through bluetooth and ads1299 should not to send data to
 bluetooth uart port. This used to protect data packet's integrity!*/
 static bool *isSending;
+unsigned long int_timestamp;
 
 static void tap_cb(unsigned char direction, unsigned char count)
 {
@@ -151,6 +152,7 @@ unsigned char mpu_rx_new;
 //TODO: rename function name and mpu_rx_new
 void data_ready_cb(void)
 {
+	msp430_get_timestamp(&int_timestamp);
     mpu_rx_new = 1;
 }
 
@@ -175,7 +177,7 @@ static void mpu9250_read_from_mpl(void)
     	     */
 //    		eMPL_send_quat(data);
     		*isSending = true;
-    		eMPL_send_data(PACKET_DATA_QUAT, data);
+    		eMPL_send_data(PACKET_DATA_QUAT, data, int_timestamp);
     		*isSending = false;
     	}
     }
@@ -183,7 +185,7 @@ static void mpu9250_read_from_mpl(void)
         if (inv_get_sensor_type_accel(data, &accuracy,
             (inv_time_t*)&timestamp)) {
         	*isSending = true;
-            eMPL_send_data(PACKET_DATA_ACCEL, data);
+            eMPL_send_data(PACKET_DATA_ACCEL, data, int_timestamp);
             *isSending = false;
         }
     }
@@ -191,7 +193,7 @@ static void mpu9250_read_from_mpl(void)
         if (inv_get_sensor_type_gyro(data, &accuracy,
             (inv_time_t*)&timestamp)) {
         	*isSending = true;
-            eMPL_send_data(PACKET_DATA_GYRO, data);
+            eMPL_send_data(PACKET_DATA_GYRO, data, int_timestamp);
             *isSending = false;
         }
     }
@@ -200,7 +202,7 @@ static void mpu9250_read_from_mpl(void)
         if (inv_get_sensor_type_compass(data, &accuracy,
             (inv_time_t*)&timestamp)) {
         	*isSending = true;
-            eMPL_send_data(PACKET_DATA_COMPASS, data);
+            eMPL_send_data(PACKET_DATA_COMPASS, data, int_timestamp);
             *isSending = false;
         }
     }
@@ -209,7 +211,7 @@ static void mpu9250_read_from_mpl(void)
         if (inv_get_sensor_type_euler(data, &accuracy,
             (inv_time_t*)&timestamp)) {
         	*isSending = true;
-            eMPL_send_data(PACKET_DATA_EULER, data);
+            eMPL_send_data(PACKET_DATA_EULER, data, int_timestamp);
             *isSending = false;
         }
     }
@@ -217,7 +219,7 @@ static void mpu9250_read_from_mpl(void)
         if (inv_get_sensor_type_rot_mat(data, &accuracy,
             (inv_time_t*)&timestamp)) {
         	*isSending = true;
-            eMPL_send_data(PACKET_DATA_ROT, data);
+            eMPL_send_data(PACKET_DATA_ROT, data, int_timestamp);
             *isSending = false;
         }
     }
@@ -225,7 +227,7 @@ static void mpu9250_read_from_mpl(void)
         if (inv_get_sensor_type_heading(data, &accuracy,
             (inv_time_t*)&timestamp)) {
         	*isSending = true;
-            eMPL_send_data(PACKET_DATA_HEADING, data);
+            eMPL_send_data(PACKET_DATA_HEADING, data, int_timestamp);
             *isSending = false;
         }
     }
@@ -250,7 +252,7 @@ static void mpu9250_read_from_mpl(void)
             dmp_get_pedometer_step_count(&dat[0]);
             dmp_get_pedometer_walk_time(&dat[1]);
             *isSending = true;
-            eMPL_send_data(PACKET_DATA_PEDOMETER, (long *)dat);
+            eMPL_send_data(PACKET_DATA_PEDOMETER, (long *)dat, int_timestamp);
             *isSending = false;
         }
     }

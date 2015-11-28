@@ -8,7 +8,6 @@
 #include "msp430_clock.h"
 
 ADS1299Manager ADSManager;
-unsigned long sampleCounter = 0; //record sampling number
 //static bool ads_rx_new = false;  //flag for new data ready
 static bool *manuallySend;  //after get new data into buffer, whether or not send new data to
                         //bluetooth uart port. if *manuallySend = false, please manually execute
@@ -126,11 +125,10 @@ void ads1299_printAllchipRegister(){
 void ads1299_update(){
 //    if(ads_rx_new){
 	    ADSManager.updateChannelData();
-	    sampleCounter++;
 	    if(*manuallySend){
 	    	bufferUpdate = true;
 	    }else{
-	    	ADSManager.writeChannelDataAsUAISLab(sampleCounter);
+	    	ADSManager.writeChannelDataAsUAISLab();
 	    }
 //	    ads_rx_new = false;
 //    }
@@ -142,7 +140,7 @@ void ads1299_update(){
 //********************************************************************************************
 void ads1299_sendData(){
 	if(bufferUpdate){
-		ADSManager.writeChannelDataAsUAISLab(sampleCounter);
+		ADSManager.writeChannelDataAsUAISLab();
 		bufferUpdate = false;
 	}
 

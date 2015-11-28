@@ -169,7 +169,7 @@ class ADS1299Manager : public ADS1299 {
     //! \param[in] sampleNumber: sample number.
     //
     //********************************************************************************************
-    void writeChannelDataAsUAISLab(uint32_t sampleNumber);
+    void writeChannelDataAsUAISLab();
     //********************************************************************************************
     //! \brief Print all register name and its value for one chip.
     //!

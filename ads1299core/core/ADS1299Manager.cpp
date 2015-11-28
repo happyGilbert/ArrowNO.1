@@ -437,7 +437,7 @@ void ADS1299Manager::stop(void)
 //! \param[in] sampleNumber: sample number.
 //
 //********************************************************************************************
-void ADS1299Manager::writeChannelDataAsUAISLab(uint32_t sampleNumber){
+void ADS1299Manager::writeChannelDataAsUAISLab(){
 	uint8_t data, *data_ptr;
 	data_ptr = &data;
 	data = PCKT_START;
@@ -445,7 +445,7 @@ void ADS1299Manager::writeChannelDataAsUAISLab(uint32_t sampleNumber){
 	data = PCKT_EEG;
 	msp430_uart_write(data_ptr,1);                   // Write eeg byte:   0x10
 
-	data = (uint8_t)(4+ADS_LEADS+ADS_LEADS_PER_CHIP*ADS_LEADS*3);
+	data = (uint8_t)(8+ADS_LEADS+ADS_LEADS_PER_CHIP*ADS_LEADS*3);
 	msp430_uart_write(data_ptr, 1);                 //write the length of the payload(samplenumber+lead-off state+eeg data)
 
 	data = (uint8_t)(sampleNumber >> 24);           //write the sample number,can used to check whether or not lost packet.
@@ -455,6 +455,15 @@ void ADS1299Manager::writeChannelDataAsUAISLab(uint32_t sampleNumber){
 	data = (uint8_t)(sampleNumber >> 8);
 	msp430_uart_write(data_ptr, 1);
 	data = (uint8_t)(sampleNumber);
+	msp430_uart_write(data_ptr, 1);
+
+	data = (uint8_t)(timestamp >> 24);           //write the timestamp of sampling, resolution: 0.1ms.
+	msp430_uart_write(data_ptr, 1);
+	data = (uint8_t)(timestamp >> 16);
+	msp430_uart_write(data_ptr, 1);
+	data = (uint8_t)(timestamp >> 8);
+	msp430_uart_write(data_ptr, 1);
+	data = (uint8_t)(timestamp);
 	msp430_uart_write(data_ptr, 1);
 
 	for(uint8_t chips = 0; chips < ADS_LEADS; chips++){

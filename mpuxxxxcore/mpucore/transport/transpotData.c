@@ -25,7 +25,7 @@
 #include "transpotData.h"
 #include "msp430_uart.h"
 
-#define PACKET_LENGTH   (21)
+#define PACKET_LENGTH   (25)
 
 //#define BUF_SIZE        (256)
 //#define PACKET_LENGTH   (23)
@@ -98,134 +98,152 @@
 //    return 0;
 //}
 
-void eMPL_send_data(unsigned char type, long *data)
+void eMPL_send_data(unsigned char type, long *data, unsigned long timestamp)
 {
-	uint8_t out[PACKET_LENGTH];
+	uint8_t out[PACKET_LENGTH], length;
     if (!data)
         return;
-    memset(out, 0, PACKET_LENGTH);
     out[0] = 0xA0;
     out[1] = type;
-    out[20] = 0xC0;
+    out[2] = (uint8_t)(timestamp >> 24);    //timestamp!
+    out[3] = (uint8_t)(timestamp >> 16);
+    out[4] = (uint8_t)(timestamp >> 8);
+    out[5] = (uint8_t)(timestamp);
     switch (type) {
     /* Two bytes per-element. */
     case PACKET_DATA_QUAT:
-        out[2] = (uint8_t)(data[0] >> 24);  //Quat data: q30 format!
-        out[3] = (uint8_t)(data[0] >> 16);
-	    out[4] = (uint8_t)(data[0] >> 8);
-        out[5] = (uint8_t)data[0];
-        out[6] = (uint8_t)(data[1] >> 24);
-        out[7] = (uint8_t)(data[1] >> 16);
-        out[8] = (uint8_t)(data[1] >> 8);
-        out[9] = (uint8_t)data[1];
-  	    out[10] = (uint8_t)(data[2] >> 24);
-  	    out[11] = (uint8_t)(data[2] >> 16);
-        out[12] = (uint8_t)(data[2] >> 8);
-	    out[13] = (uint8_t)data[2];
-        out[14] = (uint8_t)(data[3] >> 24);
-        out[15] = (uint8_t)(data[3] >> 16);
-        out[16] = (uint8_t)(data[3] >> 8);
-        out[17] = (uint8_t)data[3];
+        out[6] = (uint8_t)(data[0] >> 24);  //Quat data: q30 format!
+        out[7] = (uint8_t)(data[0] >> 16);
+	    out[8] = (uint8_t)(data[0] >> 8);
+        out[9] = (uint8_t)data[0];
+        out[10] = (uint8_t)(data[1] >> 24);
+        out[11] = (uint8_t)(data[1] >> 16);
+        out[12] = (uint8_t)(data[1] >> 8);
+        out[13] = (uint8_t)data[1];
+  	    out[14] = (uint8_t)(data[2] >> 24);
+  	    out[15] = (uint8_t)(data[2] >> 16);
+        out[16] = (uint8_t)(data[2] >> 8);
+	    out[17] = (uint8_t)data[2];
+        out[18] = (uint8_t)(data[3] >> 24);
+        out[19] = (uint8_t)(data[3] >> 16);
+        out[20] = (uint8_t)(data[3] >> 8);
+        out[21] = (uint8_t)data[3];
+        out[22] = 0xC0;
+        length = 23;
     	break;
     case PACKET_DATA_EULER:
-        out[2] = (uint8_t)(data[0] >> 24);  //Euler data: q16 format!
-        out[3] = (uint8_t)(data[0] >> 16);
-        out[4] = (uint8_t)(data[0] >> 8);
-        out[5] = (uint8_t)data[0];
-        out[6] = (uint8_t)(data[1] >> 24);
-        out[7] = (uint8_t)(data[1] >> 16);
-        out[8] = (uint8_t)(data[1] >> 8);
-        out[9] = (uint8_t)data[1];
-        out[10] = (uint8_t)(data[2] >> 24);
-        out[11] = (uint8_t)(data[2] >> 16);
-        out[12] = (uint8_t)(data[2] >> 8);
-        out[13] = (uint8_t)data[2];
+        out[6] = (uint8_t)(data[0] >> 24);  //Euler data: q16 format!
+        out[7] = (uint8_t)(data[0] >> 16);
+        out[8] = (uint8_t)(data[0] >> 8);
+        out[9] = (uint8_t)data[0];
+        out[10] = (uint8_t)(data[1] >> 24);
+        out[11] = (uint8_t)(data[1] >> 16);
+        out[12] = (uint8_t)(data[1] >> 8);
+        out[13] = (uint8_t)data[1];
+        out[14] = (uint8_t)(data[2] >> 24);
+        out[15] = (uint8_t)(data[2] >> 16);
+        out[16] = (uint8_t)(data[2] >> 8);
+        out[17] = (uint8_t)data[2];
+        out[18] = 0xC0;
+        length = 19;
         break;
     /* Three elements. */
     case PACKET_DATA_ACCEL:
-    	out[2] = (uint8_t)(data[0] >> 24);  //Accel data: q16 format!
-    	out[3] = (uint8_t)(data[0] >> 16);
-    	out[4] = (uint8_t)(data[0] >> 8);
-    	out[5] = (uint8_t)data[0];
-    	out[6] = (uint8_t)(data[1] >> 24);
-    	out[7] = (uint8_t)(data[1] >> 16);
-    	out[8] = (uint8_t)(data[1] >> 8);
-    	out[9] = (uint8_t)data[1];
-    	out[10] = (uint8_t)(data[2] >> 24);
-    	out[11] = (uint8_t)(data[2] >> 16);
-    	out[12] = (uint8_t)(data[2] >> 8);
-    	out[13] = (uint8_t)data[2];
+    	out[6] = (uint8_t)(data[0] >> 24);  //Accel data: q16 format!
+    	out[7] = (uint8_t)(data[0] >> 16);
+    	out[8] = (uint8_t)(data[0] >> 8);
+    	out[9] = (uint8_t)data[0];
+    	out[10] = (uint8_t)(data[1] >> 24);
+    	out[11] = (uint8_t)(data[1] >> 16);
+    	out[12] = (uint8_t)(data[1] >> 8);
+    	out[13] = (uint8_t)data[1];
+    	out[14] = (uint8_t)(data[2] >> 24);
+    	out[15] = (uint8_t)(data[2] >> 16);
+    	out[16] = (uint8_t)(data[2] >> 8);
+    	out[17] = (uint8_t)data[2];
+    	out[18] = 0xC0;
+    	length = 19;
     	break;
     case PACKET_DATA_GYRO:
-    	out[2] = (uint8_t)(data[0] >> 24);  //Gyro data: q16 format!
-    	out[3] = (uint8_t)(data[0] >> 16);
-    	out[4] = (uint8_t)(data[0] >> 8);
-    	out[5] = (uint8_t)data[0];
-    	out[6] = (uint8_t)(data[1] >> 24);
-    	out[7] = (uint8_t)(data[1] >> 16);
-    	out[8] = (uint8_t)(data[1] >> 8);
-    	out[9] = (uint8_t)data[1];
-    	out[10] = (uint8_t)(data[2] >> 24);
-    	out[11] = (uint8_t)(data[2] >> 16);
-    	out[12] = (uint8_t)(data[2] >> 8);
-    	out[13] = (uint8_t)data[2];
+    	out[6] = (uint8_t)(data[0] >> 24);  //Gyro data: q16 format!
+    	out[7] = (uint8_t)(data[0] >> 16);
+    	out[8] = (uint8_t)(data[0] >> 8);
+    	out[9] = (uint8_t)data[0];
+    	out[10] = (uint8_t)(data[1] >> 24);
+    	out[11] = (uint8_t)(data[1] >> 16);
+    	out[12] = (uint8_t)(data[1] >> 8);
+    	out[13] = (uint8_t)data[1];
+    	out[14] = (uint8_t)(data[2] >> 24);
+    	out[15] = (uint8_t)(data[2] >> 16);
+    	out[16] = (uint8_t)(data[2] >> 8);
+    	out[17] = (uint8_t)data[2];
+    	out[18] = 0xC0;
+    	length = 19;
     	break;
     case PACKET_DATA_COMPASS:
-    	out[2] = (uint8_t)(data[0] >> 24);  //Compass data: q16 format!
-    	out[3] = (uint8_t)(data[0] >> 16);
-    	out[4] = (uint8_t)(data[0] >> 8);
-    	out[5] = (uint8_t)data[0];
-    	out[6] = (uint8_t)(data[1] >> 24);
-    	out[7] = (uint8_t)(data[1] >> 16);
-    	out[8] = (uint8_t)(data[1] >> 8);
-    	out[9] = (uint8_t)data[1];
-    	out[10] = (uint8_t)(data[2] >> 24);
-    	out[11] = (uint8_t)(data[2] >> 16);
-    	out[12] = (uint8_t)(data[2] >> 8);
-    	out[13] = (uint8_t)data[2];
+    	out[6] = (uint8_t)(data[0] >> 24);  //Compass data: q16 format!
+    	out[7] = (uint8_t)(data[0] >> 16);
+    	out[8] = (uint8_t)(data[0] >> 8);
+    	out[9] = (uint8_t)data[0];
+    	out[10] = (uint8_t)(data[1] >> 24);
+    	out[11] = (uint8_t)(data[1] >> 16);
+    	out[12] = (uint8_t)(data[1] >> 8);
+    	out[13] = (uint8_t)data[1];
+    	out[14] = (uint8_t)(data[2] >> 24);
+    	out[15] = (uint8_t)(data[2] >> 16);
+    	out[16] = (uint8_t)(data[2] >> 8);
+    	out[17] = (uint8_t)data[2];
+    	out[18] = 0xC0;
+    	length = 19;
     	break;
     case PACKET_DATA_ROT:      //Have no enough byte for complete rotation matrix,
     	                       //but can round down the lowest bits in fractional part.
     	                       //So in here, rotation matrix format is form q30 to q14
-        out[2] = (uint8_t)(data[0] >> 24);  //ROT data: q14 format!
-        out[3] = (uint8_t)(data[0] >> 16);
-        out[4] = (uint8_t)(data[1] >> 24);
-        out[5] = (uint8_t)(data[1] >> 16);
-        out[6] = (uint8_t)(data[2] >> 24);
-        out[7] = (uint8_t)(data[2] >> 16);
-        out[8] = (uint8_t)(data[3] >> 24);
-        out[9] = (uint8_t)(data[3] >> 16);
-        out[10] = (uint8_t)(data[4] >> 24);
-        out[11] = (uint8_t)(data[4] >> 16);
-        out[12] = (uint8_t)(data[5] >> 24);
-        out[13] = (uint8_t)(data[5] >> 16);
-        out[14] = (uint8_t)(data[6] >> 24);
-        out[15] = (uint8_t)(data[6] >> 16);
-        out[16] = (uint8_t)(data[7] >> 24);
-        out[17] = (uint8_t)(data[7] >> 16);
-        out[18] = (uint8_t)(data[8] >> 24);
-        out[19] = (uint8_t)(data[8] >> 16);
+        out[6] = (uint8_t)(data[0] >> 24);  //ROT data: q14 format!
+        out[7] = (uint8_t)(data[0] >> 16);
+        out[8] = (uint8_t)(data[1] >> 24);
+        out[9] = (uint8_t)(data[1] >> 16);
+        out[10] = (uint8_t)(data[2] >> 24);
+        out[11] = (uint8_t)(data[2] >> 16);
+        out[12] = (uint8_t)(data[3] >> 24);
+        out[13] = (uint8_t)(data[3] >> 16);
+        out[14] = (uint8_t)(data[4] >> 24);
+        out[15] = (uint8_t)(data[4] >> 16);
+        out[16] = (uint8_t)(data[5] >> 24);
+        out[17] = (uint8_t)(data[5] >> 16);
+        out[18] = (uint8_t)(data[6] >> 24);
+        out[19] = (uint8_t)(data[6] >> 16);
+        out[20] = (uint8_t)(data[7] >> 24);
+        out[21] = (uint8_t)(data[7] >> 16);
+        out[22] = (uint8_t)(data[8] >> 24);
+        out[23] = (uint8_t)(data[8] >> 16);
+        out[24] = 0xC0;
+        length = 25;
         break;
     case PACKET_DATA_HEADING:
-        out[2] = (uint8_t)(data[0] >> 24);  //Heading data: q16 format!
-        out[3] = (uint8_t)(data[0] >> 16);
-        out[4] = (uint8_t)(data[0] >> 8);
-        out[5] = (uint8_t)data[0];
+        out[6] = (uint8_t)(data[0] >> 24);  //Heading data: q16 format!
+        out[7] = (uint8_t)(data[0] >> 16);
+        out[8] = (uint8_t)(data[0] >> 8);
+        out[9] = (uint8_t)data[0];
+        out[10] = 0xC0;
+        length = 11;
         break;
     case PACKET_DATA_PEDOMETER:
-        out[2] = (uint8_t)(data[0] >> 24);  //Number of steps
-        out[3] = (uint8_t)(data[0] >> 16);
-        out[4] = (uint8_t)(data[0] >> 8);
-        out[5] = (uint8_t)data[0];
-        out[6] = (uint8_t)(data[1] >> 24);  //Walk time in milliseconds.
-        out[7] = (uint8_t)(data[1] >> 16);
-        out[8] = (uint8_t)(data[1] >> 8);
-        out[9] = (uint8_t)data[1];
+        out[6] = (uint8_t)(data[0] >> 24);  //Number of steps
+        out[7] = (uint8_t)(data[0] >> 16);
+        out[8] = (uint8_t)(data[0] >> 8);
+        out[9] = (uint8_t)data[0];
+        out[10] = (uint8_t)(data[1] >> 24);  //Walk time in milliseconds.
+        out[11] = (uint8_t)(data[1] >> 16);
+        out[12] = (uint8_t)(data[1] >> 8);
+        out[13] = (uint8_t)data[1];
+        out[14] = 0xC0;
+        length = 15;
     	break;
     default:
         return;
     }
-    msp430_uart_write(out, PACKET_LENGTH);
+    msp430_uart_write(out, length);
 }
 
 //void eMPL_send_quat(long *quat)
